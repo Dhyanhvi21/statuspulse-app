@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # 2. Setup Python
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      # 3. Install linter
+      - name: Install ruff
+        run: pip install ruff
+
+      # 4. Lint code
+      - name: Lint
+        run: ruff check .
+
+      # 5. Build Docker image
+      - name: Build Docker image
+        run: docker build -t statuspulse .
+
+      # 6. Start services
+      - name: Start containers
+        run: docker compose up -d
+
+      # 7. Wait for app to be ready
+      - name: Wait for app
+        run: sleep 20
+
+      # 8. Test API
+      - name: Test health endpoint
+        run: curl http://localhost:8000/health
+
+      # 9. Stop services
+      - name: Stop containers
+        run: docker compose down
