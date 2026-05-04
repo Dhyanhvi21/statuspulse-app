@@ -52,8 +52,10 @@ jobs:
         run: sleep 20
 
       # 9. Test API
-      - name: Test health endpoint
-        run: curl http://localhost:8000/health
+      - name: Run integration tests
+        run: |
+          chmod +x tests/test_integration.sh
+          ./tests/test_integration.sh
 
       # 10. Stop containers
       - name: Stop containers
