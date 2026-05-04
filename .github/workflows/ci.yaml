@@ -32,18 +32,29 @@ jobs:
       - name: Build Docker image
         run: docker build -t statuspulse .
 
-      # 6. Start services
+      # ✅ 6. CREATE .env FILE (THIS FIXES YOUR ERROR)
+      - name: Create .env file
+        run: |
+          echo "DB_HOST=db" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "DB_NAME=statuspulse" >> .env
+          echo "DB_USER=postgres" >> .env
+          echo "DB_PASSWORD=postgres" >> .env
+          echo "REDIS_HOST=redis" >> .env
+          echo "REDIS_PORT=6379" >> .env
+
+      # 7. Start containers
       - name: Start containers
         run: docker compose up -d
 
-      # 7. Wait for app to be ready
+      # 8. Wait for app
       - name: Wait for app
         run: sleep 20
 
-      # 8. Test API
+      # 9. Test API
       - name: Test health endpoint
         run: curl http://localhost:8000/health
 
-      # 9. Stop services
+      # 10. Stop containers
       - name: Stop containers
         run: docker compose down
