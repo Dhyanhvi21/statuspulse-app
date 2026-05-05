@@ -34,12 +34,25 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_KEY }}
           script: |
+            docker network create statuspulse-net || true
+            
             docker pull ghcr.io/${{ github.repository }}:latest
 
-            docker stop statuspulse || true
-            docker rm statuspulse || true
+            docker stop statuspulse-app statuspulse-caddy || true
+            docker rm statuspulse-app statuspulse-caddy || true
 
-            docker run -d -p 80:8000 --name statuspulse ghcr.io/${{ github.repository }}:latest
+            # Run the FastAPI app
+            docker run -d --name statuspulse-app --network statuspulse-net -p 8000:8000 ghcr.io/${{ github.repository }}:latest
+
+            # Create Caddyfile on the server
+            cat << 'EOF' > Caddyfile
+            34.222.238.103.nip.io {
+                reverse_proxy statuspulse-app:8000
+            }
+            EOF
+
+            # Run Caddy reverse proxy
+            docker run -d --name statuspulse-caddy --network statuspulse-net -p 80:80 -p 443:443 -v $(pwd)/Caddyfile:/etc/caddy/Caddyfile -v caddy_data:/data -v caddy_config:/config caddy:2-alpine
 
             sleep 10
             curl -f http://localhost:8000/health || exit 1

@@ -1,0 +1,3 @@
+34.222.238.103.nip.io { 
+    reverse_proxy statuspulse-app:8000
+}
